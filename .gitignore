@@ -1,0 +1,18 @@
+# Build output
+build/
+.gradle/
+.cxx/
+*.iml
+captures/
+
+# Local config
+local.properties
+
+# IDE
+**/.idea/workspace.xml
+**/.idea/caches/
+**/.idea/deploymentTargetSelector.xml
+**/.idea/deviceManager.xml
+
+# macOS
+.DS_Store
