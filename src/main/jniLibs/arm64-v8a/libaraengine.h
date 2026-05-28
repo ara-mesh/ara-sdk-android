@@ -97,62 +97,62 @@ extern "C" {
 // licenseKey: Ed25519-signed key from Ara; empty string = 10-node evaluation limit.
 // Returns -1 on error.
 //
-extern long long AraOpen(char* pathC, char* crsqlitePathC, char* migrationsJSONC, char* networkIDC, int encryptionC, char* licenseKeyC);
+extern long long int AraOpen(char* pathC, char* crsqlitePathC, char* migrationsJSONC, char* networkIDC, int encryptionC, char* licenseKeyC);
 
 // AraClose stops the node's run loop and closes the database.
 //
-extern void AraClose(long long h);
+extern void AraClose(long long int h);
 
 // AraExec executes a write statement. argsJSON is a JSON array of bind values.
 // Returns NULL on success, an error string on failure. Caller must AraFree the result.
 //
-extern char* AraExec(long long h, char* sqlC, char* argsJSONC);
+extern char* AraExec(long long int h, char* sqlC, char* argsJSONC);
 
 // AraQuery executes a read query and returns the result as a JSON array of
 // objects keyed by column name. Returns {"error":"..."} on failure.
 // Caller must AraFree the result.
 //
-extern char* AraQuery(long long h, char* sqlC, char* argsJSONC);
+extern char* AraQuery(long long int h, char* sqlC, char* argsJSONC);
 
 // AraQueryRow executes a query and returns the first row as a JSON object,
 // or null if no rows were returned. Returns {"error":"..."} on failure.
 // Caller must AraFree the result.
 //
-extern char* AraQueryRow(long long h, char* sqlC, char* argsJSONC);
+extern char* AraQueryRow(long long int h, char* sqlC, char* argsJSONC);
 
 // AraExecTraced is like AraExec but propagates a W3C traceparent so Go spans
 // are linked as children of the caller's trace.
 //
-extern char* AraExecTraced(long long h, char* traceparentC, char* sqlC, char* argsJSONC);
+extern char* AraExecTraced(long long int h, char* traceparentC, char* sqlC, char* argsJSONC);
 
 // AraSyncTraced is like AraSync but propagates a W3C traceparent.
 //
-extern char* AraSyncTraced(long long h, char* traceparentC);
+extern char* AraSyncTraced(long long int h, char* traceparentC);
 
 // AraSync triggers an immediate sync broadcast. Returns NULL on success.
 // Caller must AraFree any non-NULL result.
 //
-extern char* AraSync(long long h);
+extern char* AraSync(long long int h);
 
 // AraAddTransportMQTT adds an MQTT transport to the node.
 // configJSON: {"broker_url":"tcp://...","network_id":"..."}
 // Returns NULL on success, error string on failure.
 // Caller must AraFree any non-NULL result.
 //
-extern char* AraAddTransportMQTT(long long h, char* configJSONC);
+extern char* AraAddTransportMQTT(long long int h, char* configJSONC);
 
 // AraAddTransportUDP adds a UDP LAN transport. port=0 uses default (7946).
 // Returns NULL on success, error string on failure.
 // Caller must AraFree any non-NULL result.
 //
-extern char* AraAddTransportUDP(long long h, int port);
+extern char* AraAddTransportUDP(long long int h, int port);
 
 // AraAddTransportUDPSeeds adds a UDP LAN transport with explicit seed peers.
 // seeds is a JSON array of "host:port" strings, e.g. `["127.0.0.1:7946"]`.
 // port=0 uses default (7946). Returns NULL on success, error string on failure.
 // Caller must AraFree any non-NULL result.
 //
-extern char* AraAddTransportUDPSeeds(long long h, int port, char* seeds);
+extern char* AraAddTransportUDPSeeds(long long int h, int port, char* seeds);
 
 // AraAddTransportMeshtastic adds a Meshtastic LoRa transport via USB serial.
 // portPath is the serial device path, e.g. "/dev/ttyUSB0" or "/dev/ttyACM0".
@@ -160,32 +160,32 @@ extern char* AraAddTransportUDPSeeds(long long h, int port, char* seeds);
 // Returns NULL on success, error string on failure.
 // Caller must AraFree any non-NULL result.
 //
-extern char* AraAddTransportMeshtastic(long long h, char* portPathC, int channel);
+extern char* AraAddTransportMeshtastic(long long int h, char* portPathC, int channel);
 
 // AraNodeID returns this node's UUID string. Caller must AraFree the result.
 //
-extern char* AraNodeID(long long h);
+extern char* AraNodeID(long long int h);
 
 // AraSchemaVersion returns the highest applied migration version, or 0.
 //
-extern int AraSchemaVersion(long long h);
+extern int AraSchemaVersion(long long int h);
 
 // AraPeers returns a JSON array of peer info objects. Caller must AraFree the result.
 //
-extern char* AraPeers(long long h);
+extern char* AraPeers(long long int h);
 
 // AraPeerGraph returns the mesh topology as a JSON object with "nodes" and
 // "edges" arrays. Each node has {id, health, self} and each edge has
 // {source, target, direct}. Caller must AraFree the result.
 //
-extern char* AraPeerGraph(long long h);
+extern char* AraPeerGraph(long long int h);
 
 // AraSetBlobDir configures the blob store directory for the node and sets
 // the sync policy. mode: 0=none, 1=thumb_only, 2=full.
 // maxBytes and maxBlobSize are 0 for unlimited.
 // Returns NULL on success, error string on failure. Caller must AraFree.
 //
-extern char* AraSetBlobDir(long long h, char* dirC, int mode, long long maxBytes, long long maxBlobSize);
+extern char* AraSetBlobDir(long long int h, char* dirC, int mode, long long int maxBytes, long long int maxBlobSize);
 
 // AraBlobIngest copies a local file into the blob store, records metadata in
 // ara_blobs, marks it locally available, and returns its SHA-256 id.
@@ -194,12 +194,12 @@ extern char* AraSetBlobDir(long long h, char* dirC, int mode, long long maxBytes
 // Returns the id string on success, or {"error":"..."} on failure.
 // Caller must AraFree the result.
 //
-extern char* AraBlobIngest(long long h, char* pathC, char* mimeTypeC);
+extern char* AraBlobIngest(long long int h, char* pathC, char* mimeTypeC);
 
 // AraBlobPath returns the filesystem path of a stored blob, or "" if not present.
 // Caller must AraFree the result.
 //
-extern char* AraBlobPath(long long h, char* idC);
+extern char* AraBlobPath(long long int h, char* idC);
 
 // AraFree releases a C string previously returned by any Ara function.
 // Always call this on non-NULL strings returned by the API.
@@ -211,27 +211,27 @@ extern void AraFree(char* ptr);
 // "ara-android" if empty. Safe to call after AraOpen on the same handle.
 // Returns NULL on success, error string on failure.
 //
-extern char* AraInitOTLP(long long h, char* addrC, char* serviceNameC);
+extern char* AraInitOTLP(long long int h, char* addrC, char* serviceNameC);
 
 // AraPublicKey returns the node's X25519 public key as a hex string.
 // Returns "" if encryption is not enabled. Caller must AraFree the result.
 //
-extern char* AraPublicKey(long long h);
+extern char* AraPublicKey(long long int h);
 
 // AraAllowPeer adds a peer's public key to the CRDT-synced allowlist.
 // pubkeyHex is the hex-encoded X25519 public key from AraPublicKey.
 // label is a human-readable name. Returns NULL on success, error string on failure.
 // Caller must AraFree any non-NULL result.
 //
-extern char* AraAllowPeer(long long h, char* pubkeyHexC, char* labelC);
+extern char* AraAllowPeer(long long int h, char* pubkeyHexC, char* labelC);
 
 // AraRevokePeer marks a peer's public key as revoked in the CRDT-synced allowlist.
 // pubkeyHex is the hex-encoded X25519 public key from AraPublicKey.
 // Returns NULL on success, error string on failure.
 // Caller must AraFree any non-NULL result.
 //
-extern char* AraRevokePeer(long long h, char* pubkeyHexC);
-extern void AraSetSyncInterval(long long h, int secondsC);
+extern char* AraRevokePeer(long long int h, char* pubkeyHexC);
+extern void AraSetSyncInterval(long long int h, int secondsC);
 
 #ifdef __cplusplus
 }
