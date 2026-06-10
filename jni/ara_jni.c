@@ -198,6 +198,12 @@ Java_com_aramesh_sdk_v1_Ara_nativeSchemaVersion(JNIEnv* env, jclass cls, jlong h
     return (jint)AraSchemaVersion((long long)h);
 }
 
+JNIEXPORT void JNICALL
+Java_com_aramesh_sdk_v1_Ara_nativeSetSyncInterval(JNIEnv* env, jclass cls, jlong h, jint seconds)
+{
+    AraSetSyncInterval((long long)h, (int)seconds);
+}
+
 JNIEXPORT jstring JNICALL
 Java_com_aramesh_sdk_v1_Ara_nativePeers(JNIEnv* env, jclass cls, jlong h)
 {

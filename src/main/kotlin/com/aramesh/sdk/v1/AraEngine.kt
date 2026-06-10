@@ -156,13 +156,11 @@ class Node internal constructor(
      * Configure the blob store directory and automatic sync policy.
      * Call before [Ara.open] starts the run loop.
      *
-     * @param dir   Directory path for blob storage (created if absent).
-     * @param mode  0 = none (default), 1 = thumbnails only, 2 = full blobs.
-     * @param maxBytes    Total storage cap in bytes; 0 = unlimited.
-     * @param maxBlobSize Skip individual blobs larger than this; 0 = unlimited.
+     * @param dir     Directory path for blob storage (created if absent).
+     * @param policy  Sync mode and storage caps (see [BlobPolicy]).
      */
-    fun setBlobPolicy(dir: String, mode: Int = 0, maxBytes: Long = 0L, maxBlobSize: Long = 0L) {
-        val err = Ara.nativeSetBlobDir(handle, dir, mode, maxBytes, maxBlobSize)
+    fun setBlobStore(dir: String, policy: BlobPolicy = BlobPolicy()) {
+        val err = Ara.nativeSetBlobDir(handle, dir, policy.mode.code, policy.maxBytes, policy.maxBlobSize)
         if (err != null) throw AraException(err)
     }
 
@@ -171,9 +169,9 @@ class Node internal constructor(
      * and mark it locally available. Returns the SHA-256 id.
      * The returned id can be referenced in app tables (e.g. messages.attachment_id).
      */
-    fun blobIngest(path: String, mimeType: String = "application/octet-stream"): String {
+    fun ingestBlob(path: String, mimeType: String = "application/octet-stream"): String {
         val result = Ara.nativeBlobIngest(handle, path, mimeType)
-            ?: throw AraException("blobIngest returned null")
+            ?: throw AraException("ingestBlob returned null")
         if (result.startsWith("{\"error\"")) throw AraException(result)
         return result
     }
@@ -262,6 +260,29 @@ data class PeerInfo(
     val transports: List<String>,
 )
 
+/** Whether a node automatically fetches blob bytes from peers. */
+enum class BlobSyncMode(val code: Int) {
+    /** Metadata only; never pull bytes (default). */
+    None(0),
+    /** Pull thumbnails only (≤ 2 KB). */
+    ThumbOnly(1),
+    /** Pull full blobs when the transport allows. */
+    Full(2),
+}
+
+/**
+ * Blob store sync policy. Passed to [Node.setBlobStore].
+ *
+ * @param mode        Whether and how far to auto-replicate blob bytes.
+ * @param maxBytes    Total storage cap in bytes; 0 = unlimited.
+ * @param maxBlobSize Skip individual blobs larger than this; 0 = unlimited.
+ */
+data class BlobPolicy(
+    val mode: BlobSyncMode = BlobSyncMode.None,
+    val maxBytes: Long = 0L,
+    val maxBlobSize: Long = 0L,
+)
+
 /** A node in the mesh topology graph. */
 data class GraphNode(val id: String, val health: String, val self: Boolean)
 
@@ -318,6 +339,8 @@ object Ara {
      * @param networkId   Logical mesh identifier — only nodes with the same ID sync
      * @param encryption  Enable X25519 keypairs and AES-256-GCM message encryption
      * @param licenseKey  Ed25519-signed key from Ara; empty = 10-node evaluation limit
+     * @param syncIntervalSeconds  Periodic handshake interval; default 30s. Widen for
+     *                    LoRa nodes to stay within the duty-cycle budget.
      */
     fun open(
         context: Context,
@@ -326,12 +349,14 @@ object Ara {
         networkId: String = "",
         encryption: Boolean = false,
         licenseKey: String = "",
+        syncIntervalSeconds: Int = 30,
     ): Node {
         val crsqlitePath =
             "${context.applicationInfo.nativeLibraryDir}/libcrsqlite.so"
         val migrationsJson = JSONArray(migrations.map { it.toJson() }).toString()
         val handle = nativeOpen(path, crsqlitePath, migrationsJson, networkId, if (encryption) 1 else 0, licenseKey)
         if (handle < 0L) throw AraException("Ara.open failed — check logs")
+        if (syncIntervalSeconds > 0) nativeSetSyncInterval(handle, syncIntervalSeconds)
         val nodeId = nativeNodeID(handle) ?: ""
         return Node(handle, nodeId)
     }
@@ -352,6 +377,7 @@ object Ara {
     @JvmStatic external fun nativeAddTransportMeshtastic(handle: Long, portPath: String, channel: Int): String?
     @JvmStatic external fun nativeNodeID(handle: Long): String?
     @JvmStatic external fun nativeSchemaVersion(handle: Long): Int
+    @JvmStatic external fun nativeSetSyncInterval(handle: Long, seconds: Int)
     @JvmStatic external fun nativePeers(handle: Long): String?
     @JvmStatic external fun nativePeerGraph(handle: Long): String?
     @JvmStatic external fun nativeInitOTLP(handle: Long, otlpAddr: String, serviceName: String): String?
